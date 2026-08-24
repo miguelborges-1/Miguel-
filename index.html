@@ -3,144 +3,639 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placar Ao Vivo</title>
+    <title>FutAoVivo - Acompanhamento em Tempo Real</title>
     <style>
         :root {
-            --bg: #121212;
-            --surface: #1e1e1e;
-            --primary: #00ff88;
-            --text: #ffffff;
-            --text-secondary: #aaaaaa;
+            --primary-green: #00875a;
+            --dark-green: #054f31;
+            --light-green: #e6f4ea;
+            --accent-green: #00b87c;
+            --bg-gray: #f4f6f8;
+            --surface-white: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --live-red: #ef4444;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            margin-bottom: 30px;
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .match-card {
-            background: var(--surface);
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 15px;
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+            color: var(--surface-white);
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 4px solid var(--primary);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        .team {
-            font-size: 1.2rem;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .live-badge {
+            background-color: var(--live-red);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            animation: pulse 1.5s infinite;
+        }
+
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
             font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background: var(--surface-white);
+            color: var(--dark-green);
+        }
+
+        /* Layout Container */
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            width: 100%;
             flex: 1;
         }
-        
-        .team-away {
-            text-align: right;
+
+        /* Sidebar - Lista de Jogos */
+        .sidebar {
+            background: var(--surface-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        
-        .score {
-            font-size: 1.8rem;
-            font-weight: 900;
-            padding: 0 20px;
-            color: var(--primary);
-            letter-spacing: 2px;
+
+        .sidebar-header {
+            background: var(--light-green);
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--dark-green);
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        .status {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+
+        .match-list {
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .match-card {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .match-card:hover, .match-card.selected {
+            background-color: var(--light-green);
+        }
+
+        .league-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .team-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0;
+            font-weight: 600;
+        }
+
+        .match-status {
+            font-size: 0.8rem;
+            color: var(--primary-green);
+            font-weight: 700;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Main Content - Detalhes da Partida */
+        .main-panel {
+            background: var(--surface-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Match Scoreboard Banner */
+        .scoreboard-banner {
+            background: linear-gradient(to right, var(--dark-green), var(--primary-green));
+            color: white;
+            padding: 30px;
             text-align: center;
-            min-width: 80px;
+            position: relative;
         }
-        
-        .live-indicator {
-            color: #ff3333;
-            font-weight: bold;
-            animation: blink 1.5s infinite;
+
+        .match-meta {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
         }
-        
-        @keyframes blink {
+
+        .teams-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .team-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 30%;
+        }
+
+        .team-flag {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-green);
+            font-weight: 900;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 25px;
+            border-radius: 8px;
+        }
+
+        /* Match Tabs Nav */
+        .match-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-green);
+            border-bottom-color: var(--primary-green);
+            background: var(--light-green);
+        }
+
+        .tab-content {
+            padding: 20px;
+            display: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Timeline / Mance lance a lance */
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .timeline-time {
+            background: var(--primary-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            height: fit-content;
+        }
+
+        .timeline-body {
+            background: var(--bg-gray);
+            padding: 12px;
+            border-radius: 8px;
+            flex: 1;
+            border-left: 3px solid var(--primary-green);
+        }
+
+        /* Stats Bars */
+        .stat-row {
+            margin-bottom: 15px;
+        }
+
+        .stat-labels {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-bar-bg {
+            background: var(--border-color);
+            height: 10px;
+            border-radius: 5px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .stat-bar-home {
+            background: var(--primary-green);
+            height: 100%;
+        }
+
+        .stat-bar-away {
+            background: var(--dark-green);
+            height: 100%;
+        }
+
+        /* Lineup Pitch */
+        .pitch {
+            background: var(--primary-green);
+            background-image: 
+                radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px),
+                linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 30px 30px, 50% 100%, 100% 50%;
+            height: 380px;
+            border-radius: 8px;
+            border: 2px solid white;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            color: white;
+        }
+
+        .pitch-side {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .player-dot {
+            background: white;
+            color: var(--dark-green);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            width: fit-content;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Animations */
+        @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                max-height: 300px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚽ Futebol em Tempo Real</h1>
-        <div id="matches-container">
-            <p style="text-align:center; color: var(--text-secondary);">Buscando jogos ao vivo...</p>
+
+    <header>
+        <div class="logo">
+            ⚽ FutAoVivo <span class="live-badge">DIRETO</span>
         </div>
+        <nav>
+            <button class="nav-btn active">Ao Vivo</button>
+            <button class="nav-btn">Próximos</button>
+            <button class="nav-btn">Encerrados</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar - Match List -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span>Jogos em Andamento</span>
+                <span id="total-matches-count">3</span>
+            </div>
+            <div class="match-list" id="match-list">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+        </aside>
+
+        <!-- Main Panel - Detailed Dashboard -->
+        <main class="main-panel">
+            <div class="scoreboard-banner">
+                <div class="match-meta" id="match-meta">Brasileirão Série A • Estádio Maracanã</div>
+                <div class="teams-display">
+                    <div class="team-box">
+                        <div class="team-flag" id="home-flag">FLA</div>
+                        <h2 id="home-name">Flamengo</h2>
+                    </div>
+                    <div class="score-display">
+                        <span id="home-score">2</span> - <span id="away-score">1</span>
+                    </div>
+                    <div class="team-box">
+                        <div class="team-flag" id="away-flag">PAL</div>
+                        <h2 id="away-name">Palmeiras</h2>
+                    </div>
+                </div>
+                <div style="font-weight: 700;" id="match-time">⏱️ <span id="live-minute">68</span>' Segundo Tempo</div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="match-tabs">
+                <button class="tab-btn active" onclick="switchTab('narracao')">Lance a Lance</button>
+                <button class="tab-btn" onclick="switchTab('estatisticas')">Estatísticas</button>
+                <button class="tab-btn" onclick="switchTab('escalacao')">Escalação</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="narracao" class="tab-content active">
+                <div id="timeline-container">
+                    <!-- Eventos inseridos via JS -->
+                </div>
+            </div>
+
+            <div id="estatisticas" class="tab-content">
+                <div class="stat-row">
+                    <div class="stat-labels">
+                        <span id="stat-pos-h">58%</span>
+                        <span>Posse de Bola</span>
+                        <span id="stat-pos-a">42%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-home" id="bar-pos-h" style="width: 58%;"></div>
+                        <div class="stat-bar-away" id="bar-pos-a" style="width: 42%;"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-labels">
+                        <span id="stat-chute-h">14</span>
+                        <span>Finalizações</span>
+                        <span id="stat-chute-a">8</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-home" style="width: 63%;"></div>
+                        <div class="stat-bar-away" style="width: 37%;"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-labels">
+                        <span>5</span>
+                        <span>Escanteios</span>
+                        <span>3</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-home" style="width: 60%;"></div>
+                        <div class="stat-bar-away" style="width: 40%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="escalacao" class="tab-content">
+                <div class="pitch">
+                    <div class="pitch-side">
+                        <div class="player-dot">GOL - Rossi</div>
+                        <div class="player-dot">DEF - Fabrício B.</div>
+                        <div class="player-dot">MEI - De La Cruz</div>
+                        <div class="player-dot">ATA - Pedro</div>
+                    </div>
+                    <div class="pitch-side" style="align-items: flex-end;">
+                        <div class="player-dot">GOL - Weverton</div>
+                        <div class="player-dot">DEF - Gustavo G.</div>
+                        <div class="player-dot">MEI - Veiga</div>
+                        <div class="player-dot">ATA - Rony</div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // Simulação da estrutura de dados que uma API real retornaria
-        const mockData = [
-            { home: "Flamengo", away: "Palmeiras", homeScore: 1, awayScore: 1, time: "67'", isLive: true },
-            { home: "São Paulo", away: "Corinthians", homeScore: 0, awayScore: 0, time: "15'", isLive: true },
-            { home: "Grêmio", away: "Internacional", homeScore: 2, awayScore: 1, time: "Encerrado", isLive: false }
+        // Dados simulados em tempo real
+        const matchesData = [
+            {
+                id: 1,
+                league: "Brasileirão Série A",
+                venue: "Estádio Maracanã",
+                homeTeam: "Flamengo",
+                homeFlag: "FLA",
+                awayTeam: "Palmeiras",
+                awayFlag: "PAL",
+                homeScore: 2,
+                awayScore: 1,
+                minute: 68,
+                stats: { posH: "58%", posA: "42%", chuteH: 14, chuteA: 8 },
+                timeline: [
+                    { time: "65'", text: "🟨 Cartão Amarelo para o volante por falta tática no meio campo." },
+                    { time: "52'", text: "⚽ GOOOOL DO FLAMENGO! Chute forte no canto esquerdo da grande área!" },
+                    { time: "45'", text: "🔔 Início do Segundo Tempo no Maracanã!" },
+                    { time: "38'", text: "⚽ GOOOOL DO PALMEIRAS! Empate de cabeça após cobrança de escanteio!" },
+                    { time: "12'", text: "⚽ GOOOOL DO FLAMENGO! Cobrança perfeita de pênalti." }
+                ]
+            },
+            {
+                id: 2,
+                league: "UEFA Champions League",
+                venue: "Santiago Bernabéu",
+                homeTeam: "Real Madrid",
+                homeFlag: "RMA",
+                awayTeam: "Bayern",
+                awayFlag: "BAY",
+                homeScore: 0,
+                awayScore: 0,
+                minute: 24,
+                stats: { posH: "50%", posA: "50%", chuteH: 4, chuteA: 5 },
+                timeline: [
+                    { time: "20'", text: "🧤 Grande defesa do goleiro espalmando para escanteio!" },
+                    { time: "01'", text: "🚀 Apito inicial! A bola está rolando." }
+                ]
+            },
+            {
+                id: 3,
+                league: "Copa do Brasil",
+                venue: "Neo Química Arena",
+                homeTeam: "Corinthians",
+                homeFlag: "COR",
+                awayTeam: "Gremio",
+                awayFlag: "GRE",
+                homeScore: 1,
+                awayScore: 0,
+                minute: 81,
+                stats: { posH: "45%", posA: "55%", chuteH: 9, chuteA: 11 },
+                timeline: [
+                    { time: "78'", text: "🔴 CARTÃO VERMELHO! Entrada dura e expulsão direta." },
+                    { time: "30'", text: "⚽ GOOOOL DO CORINTHIANS! Finalização precisa na saída do goleiro." }
+                ]
+            }
         ];
 
-        function renderMatches() {
-            const container = document.getElementById('matches-container');
-            container.innerHTML = ''; // Limpa a mensagem de carregamento
+        let selectedMatchId = 1;
 
-            mockData.forEach(match => {
-                const statusClass = match.isLive ? 'live-indicator' : '';
-                const timeText = match.isLive ? `🔴 ${match.time}` : match.time;
-                
-                const matchHTML = `
-                    <div class="match-card">
-                        <div class="team">${match.home}</div>
-                        <div class="score">${match.homeScore} - ${match.awayScore}</div>
-                        <div class="team team-away">${match.away}</div>
-                        <div class="status ${statusClass}">${timeText}</div>
+        // Renderiza lista lateral
+        function renderMatchList() {
+            const listEl = document.getElementById('match-list');
+            listEl.innerHTML = '';
+
+            matchesData.forEach(match => {
+                const card = document.createElement('div');
+                card.className = `match-card ${match.id === selectedMatchId ? 'selected' : ''}`;
+                card.onclick = () => selectMatch(match.id);
+
+                card.innerHTML = `
+                    <div class="league-title">${match.league}</div>
+                    <div class="team-row">
+                        <span>${match.homeTeam}</span>
+                        <span>${match.homeScore}</span>
+                    </div>
+                    <div class="team-row">
+                        <span>${match.awayTeam}</span>
+                        <span>${match.awayScore}</span>
+                    </div>
+                    <div class="match-status">
+                        <span>⏱️ ${match.minute}'</span>
+                        <span style="color: var(--live-red);">● EM ANDAMENTO</span>
                     </div>
                 `;
-                container.innerHTML += matchHTML;
+                listEl.appendChild(card);
             });
         }
 
-        // Simula o tempo de resposta de um servidor (1 segundo)
-        setTimeout(renderMatches, 1000);
+        // Altera partida exibida no painel central
+        function selectMatch(id) {
+            selectedMatchId = id;
+            const match = matchesData.find(m => m.id === id);
 
-        /* 
-        ========================================================
-        CÓDIGO PARA A API REAL (Descomente quando tiver uma chave)
-        ========================================================
-        async function fetchLiveScores() {
-            try {
-                const response = await fetch('URL_DA_SUA_API_AQUI', {
-                    headers: { 'x-api-key': 'SEU_TOKEN_AQUI' }
-                });
-                const data = await response.json();
-                
-                // Mapeie 'data' para a mesma estrutura do 'mockData' e chame renderMatches()
-            } catch (error) {
-                console.error("Erro ao buscar os jogos:", error);
-            }
+            document.getElementById('match-meta').innerText = `${match.league} • ${match.venue}`;
+            document.getElementById('home-name').innerText = match.homeTeam;
+            document.getElementById('away-name').innerText = match.awayTeam;
+            document.getElementById('home-flag').innerText = match.homeFlag;
+            document.getElementById('away-flag').innerText = match.awayFlag;
+            document.getElementById('home-score').innerText = match.homeScore;
+            document.getElementById('away-score').innerText = match.awayScore;
+            document.getElementById('live-minute').innerText = match.minute;
+
+            // Estatísticas
+            document.getElementById('stat-pos-h').innerText = match.stats.posH;
+            document.getElementById('stat-pos-a').innerText = match.stats.posA;
+            document.getElementById('bar-pos-h').style.width = match.stats.posH;
+            document.getElementById('bar-pos-a').style.width = match.stats.posA;
+            document.getElementById('stat-chute-h').innerText = match.stats.chuteH;
+            document.getElementById('stat-chute-a').innerText = match.stats.chuteA;
+
+            // Timeline
+            const timelineEl = document.getElementById('timeline-container');
+            timelineEl.innerHTML = '';
+            match.timeline.forEach(event => {
+                timelineEl.innerHTML += `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${event.time}</div>
+                        <div class="timeline-body">${event.text}</div>
+                    </div>
+                `;
+            });
+
+            renderMatchList();
         }
-        
-        // Atualiza os dados a cada 60 segundos
-        // setInterval(fetchLiveScores, 60000); 
-        */
+
+        // Navegação por abas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Simulação de atualizações em tempo real (Motor Dinâmico)
+        setInterval(() => {
+            matchesData.forEach(match => {
+                if (match.minute < 90) {
+                    match.minute += 1;
+                }
+            });
+
+            // Atualizar tempo na tela se a partida ativa for alterada
+            const currentMatch = matchesData.find(m => m.id === selectedMatchId);
+            document.getElementById('live-minute').innerText = currentMatch.minute;
+
+            renderMatchList();
+        }, 5000); // Atualiza minutos a cada 5 segundos para simulação
+
+        // Inicialização
+        selectMatch(1);
     </script>
 </body>
 </html>
