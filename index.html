@@ -639,3 +639,715 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutAoVivo Pro - Cobertura Global e Escalações</title>
+    <style>
+        :root {
+            --primary-green: #00875a;
+            --dark-green: #054f31;
+            --light-green: #e6f4ea;
+            --accent-green: #00b87c;
+            --pitch-green: #1a7a3e;
+            --bg-gray: #f0f2f5;
+            --surface-white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --live-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+            color: var(--surface-white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .live-badge {
+            background-color: var(--live-red);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .league-filter {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--surface-white);
+            color: var(--dark-green);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 20px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+        }
+
+        .sidebar {
+            background: var(--surface-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 90px;
+        }
+
+        .sidebar-header {
+            background: var(--light-green);
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--dark-green);
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .match-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .match-card {
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .match-card:hover, .match-card.selected {
+            background-color: var(--light-green);
+        }
+
+        .league-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .team-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .match-status {
+            font-size: 0.8rem;
+            color: var(--primary-green);
+            font-weight: 700;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .main-panel {
+            background: var(--surface-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .scoreboard-banner {
+            background: linear-gradient(to right, var(--dark-green), var(--primary-green));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .match-meta {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .teams-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .team-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 35%;
+        }
+
+        .team-badge {
+            width: 55px;
+            height: 55px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-green);
+            font-weight: 900;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 2px solid var(--accent-green);
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 900;
+            background: rgba(0,0,0,0.25);
+            padding: 4px 20px;
+            border-radius: 8px;
+            letter-spacing: 2px;
+        }
+
+        .match-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            background: none;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-green);
+            border-bottom-color: var(--primary-green);
+            background: var(--light-green);
+        }
+
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Campo Tático e Escalação */
+        .lineup-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .team-lineup-card {
+            background: var(--bg-gray);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .team-lineup-card h3 {
+            color: var(--dark-green);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--primary-green);
+            padding-bottom: 5px;
+        }
+
+        .player-list {
+            list-style: none;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .player-number {
+            background: var(--primary-green);
+            color: white;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-right: 8px;
+        }
+
+        .player-pos {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pitch-view {
+            background: var(--pitch-green);
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.2) 2px, transparent 2px),
+                linear-gradient(to bottom, rgba(255,255,255,0.2) 2px, transparent 2px);
+            background-size: 100% 50%, 50% 100%;
+            border: 3px solid white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .pitch-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .pitch-player {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        /* Timeline & Stats */
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-time {
+            background: var(--primary-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            height: fit-content;
+        }
+
+        .timeline-body {
+            background: var(--bg-gray);
+            padding: 10px 14px;
+            border-radius: 6px;
+            flex: 1;
+            border-left: 3px solid var(--primary-green);
+            font-size: 0.9rem;
+        }
+
+        .stat-row {
+            margin-bottom: 12px;
+        }
+
+        .stat-labels {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-bar-bg {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .stat-bar-home { background: var(--primary-green); height: 100%; }
+        .stat-bar-away { background: var(--dark-green); height: 100%; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+            .sidebar { height: auto; position: static; }
+            .lineup-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            ⚽ FutAoVivo <span class="live-badge">AO VIVO</span>
+        </div>
+        <div class="league-filter">
+            <button class="filter-btn active" onclick="filterLeague('ALL')">Todos</button>
+            <button class="filter-btn" onclick="filterLeague('BRA')">🇧🇷 Brasileirão</button>
+            <button class="filter-btn" onclick="filterLeague('UCL')">🇪🇺 Champions League</button>
+            <button class="filter-btn" onclick="filterLeague('EPL')">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
+            <button class="filter-btn" onclick="filterLeague('ESP')">🇪🇸 La Liga</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span>Jogos em Destaque</span>
+                <span id="match-count">0</span>
+            </div>
+            <div class="match-list" id="match-list"></div>
+        </aside>
+
+        <main class="main-panel">
+            <div class="scoreboard-banner">
+                <div class="match-meta" id="match-meta">-</div>
+                <div class="teams-display">
+                    <div class="team-box">
+                        <div class="team-badge" id="home-badge">---</div>
+                        <h2 id="home-name">Casa</h2>
+                    </div>
+                    <div class="score-display">
+                        <span id="home-score">0</span> - <span id="away-score">0</span>
+                    </div>
+                    <div class="team-box">
+                        <div class="team-badge" id="away-badge">---</div>
+                        <h2 id="away-name">Fora</h2>
+                    </div>
+                </div>
+                <div style="font-weight: 700; margin-top: 10px;" id="match-time">⏱️ <span id="live-minute">0</span>'</div>
+            </div>
+
+            <div class="match-tabs">
+                <button class="tab-btn active" onclick="switchTab('escalacao')">Escalações Titulares</button>
+                <button class="tab-btn" onclick="switchTab('narracao')">Lance a Lance</button>
+                <button class="tab-btn" onclick="switchTab('estatisticas')">Estatísticas</button>
+            </div>
+
+            <div id="escalacao" class="tab-content active">
+                <div class="lineup-container">
+                    <div class="team-lineup-card">
+                        <h3 id="lineup-home-title">Mandante</h3>
+                        <ul class="player-list" id="home-players-list"></ul>
+                    </div>
+                    <div class="team-lineup-card">
+                        <h3 id="lineup-away-title">Visitante</h3>
+                        <ul class="player-list" id="away-players-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="narracao" class="tab-content">
+                <div id="timeline-container"></div>
+            </div>
+
+            <div id="estatisticas" class="tab-content">
+                <div class="stat-row">
+                    <div class="stat-labels">
+                        <span id="stat-pos-h">50%</span>
+                        <span>Posse de Bola</span>
+                        <span id="stat-pos-a">50%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-home" id="bar-pos-h" style="width: 50%;"></div>
+                        <div class="stat-bar-away" id="bar-pos-a" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-labels">
+                        <span id="stat-chute-h">0</span>
+                        <span>Finalizações</span>
+                        <span id="stat-chute-a">0</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-home" id="bar-chute-h" style="width: 50%;"></div>
+                        <div class="stat-bar-away" id="bar-chute-a" style="width: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Banco de Dados Completo com Clubes Brasileiros e Europeus e seus 11 Titulares
+        const teamsDatabase = {
+            // BRASIL
+            "FLA": { name: "Flamengo", category: "BRA", squad: [
+                { num: 1, name: "Rossi", pos: "GOL" },
+                { num: 2, name: "Varela", pos: "LAT" },
+                { num: 15, name: "Fabrício Bruno", pos: "ZAG" },
+                { num: 4, name: "Léo Pereira", pos: "ZAG" },
+                { num: 6, name: "Ayrton Lucas", pos: "LAT" },
+                { num: 13, name: "Erick Pulgar", pos: "VOL" },
+                { num: 18, name: "De La Cruz", pos: "MEI" },
+                { num: 14, name: "Arrascaeta", pos: "MEI" },
+                { num: 8, name: "Gerson", pos: "MEI" },
+                { num: 7, name: "Luiz Araújo", pos: "ATA" },
+                { num: 9, name: "Pedro", pos: "ATA" }
+            ]},
+            "PAL": { name: "Palmeiras", category: "BRA", squad: [
+                { num: 21, name: "Weverton", pos: "GOL" },
+                { num: 12, name: "Mayke", pos: "LAT" },
+                { num: 15, name: "Gustavo Gómez", pos: "ZAG" },
+                { num: 26, name: "Murilo", pos: "ZAG" },
+                { num: 22, name: "Piquerez", pos: "LAT" },
+                { num: 5, name: "Aníbal Moreno", pos: "VOL" },
+                { num: 8, name: "Zé Rafael", pos: "VOL" },
+                { num: 23, name: "Raphael Veiga", pos: "MEI" },
+                { num: 41, name: "Estêvão", pos: "ATA" },
+                { num: 9, name: "Felipe Anderson", pos: "ATA" },
+                { num: 42, name: "Flaco López", pos: "ATA" }
+            ]},
+            "BOT": { name: "Botafogo", category: "BRA", squad: [
+                { num: 12, name: "John", pos: "GOL" },
+                { num: 2, name: "Vitinho", pos: "LAT" },
+                { num: 15, name: "Bastos", pos: "ZAG" },
+                { num: 20, name: "Alexander Barboza", pos: "ZAG" },
+                { num: 13, name: "Alex Telles", pos: "LAT" },
+                { num: 26, name: "Gregore", pos: "VOL" },
+                { num: 17, name: "Marlon Freitas", pos: "VOL" },
+                { num: 10, name: "Thiago Almada", pos: "MEI" },
+                { num: 7, name: "Luiz Henrique", pos: "ATA" },
+                { num: 11, name: "Savarino", pos: "ATA" },
+                { num: 99, name: "Igor Jesus", pos: "ATA" }
+            ]},
+            "RMA": { name: "Real Madrid", category: "ESP", squad: [
+                { num: 1, name: "Thibaut Courtois", pos: "GOL" },
+                { num: 2, name: "Dani Carvajal", pos: "LAT" },
+                { num: 3, name: "Éder Militão", pos: "ZAG" },
+                { num: 22, name: "Antonio Rüdiger", pos: "ZAG" },
+                { num: 23, name: "Ferland Mendy", pos: "LAT" },
+                { num: 14, name: "Aurelien Tchouaméni", pos: "VOL" },
+                { num: 8, name: "Federico Valverde", pos: "MEI" },
+                { num: 5, name: "Jude Bellingham", pos: "MEI" },
+                { num: 11, name: "Rodrygo Goes", pos: "ATA" },
+                { num: 7, name: "Vinícius Júnior", pos: "ATA" },
+                { num: 9, name: "Kylian Mbappé", pos: "ATA" }
+            ]},
+            "BAR": { name: "Barcelona", category: "ESP", squad: [
+                { num: 1, name: "Marc-André ter Stegen", pos: "GOL" },
+                { num: 23, name: "Jules Koundé", pos: "LAT" },
+                { num: 2, name: "Pau Cubarsí", pos: "ZAG" },
+                { num: 5, name: "Iñigo Martínez", pos: "ZAG" },
+                { num: 3, name: "Alejandro Balde", pos: "LAT" },
+                { num: 17, name: "Marc Casadó", pos: "VOL" },
+                { num: 8, name: "Pedri", pos: "MEI" },
+                { num: 20, name: "Dani Olmo", pos: "MEI" },
+                { num: 19, name: "Lamine Yamal", pos: "ATA" },
+                { num: 11, name: "Raphinha", pos: "ATA" },
+                { num: 9, name: "Robert Lewandowski", pos: "ATA" }
+            ]},
+            "MCI": { name: "Manchester City", category: "EPL", squad: [
+                { num: 31, name: "Ederson", pos: "GOL" },
+                { num: 2, name: "Kyle Walker", pos: "LAT" },
+                { num: 3, name: "Rúben Dias", pos: "ZAG" },
+                { num: 25, name: "Manuel Akanji", pos: "ZAG" },
+                { num: 24, name: "Josko Gvardiol", pos: "LAT" },
+                { num: 16, name: "Rodri", pos: "VOL" },
+                { num: 8, name: "Mateo Kovacic", pos: "MEI" },
+                { num: 17, name: "Kevin De Bruyne", pos: "MEI" },
+                { num: 20, name: "Bernardo Silva", pos: "ATA" },
+                { num: 47, name: "Phil Foden", pos: "ATA" },
+                { num: 9, name: "Erling Haaland", pos: "ATA" }
+            ]},
+            "LIV": { name: "Liverpool", category: "EPL", squad: [
+                { num: 1, name: "Alisson Becker", pos: "GOL" },
+                { num: 66, name: "Trent Alexander-Arnold", pos: "LAT" },
+                { num: 5, name: "Ibrahima Konaté", pos: "ZAG" },
+                { num: 4, name: "Virgil van Dijk", pos: "ZAG" },
+                { num: 26, name: "Andy Robertson", pos: "LAT" },
+                { num: 38, name: "Ryan Gravenberch", pos: "VOL" },
+                { num: 10, name: "Alexis Mac Allister", pos: "MEI" },
+                { num: 8, name: "Dominik Szoboszlai", pos: "MEI" },
+                { num: 11, name: "Mohamed Salah", pos: "ATA" },
+                { num: 7, name: "Luis Díaz", pos: "ATA" },
+                { num: 9, name: "Darwin Núñez", pos: "ATA" }
+            ]},
+            "BAY": { name: "Bayern München", category: "UCL", squad: [
+                { num: 1, name: "Manuel Neuer", pos: "GOL" },
+                { num: 27, name: "Konrad Laimer", pos: "LAT" },
+                { num: 2, name: "Dayot Upamecano", pos: "ZAG" },
+                { num: 3, name: "Kim Min-jae", pos: "ZAG" },
+                { num: 19, name: "Alphonso Davies", pos: "LAT" },
+                { num: 6, name: "Joshua Kimmich", pos: "VOL" },
+                { num: 45, name: "Aleksandar Pavlovic", pos: "VOL" },
+                { num: 42, name: "Jamal Musiala", pos: "MEI" },
+                { num: 17, name: "Michael Olise", pos: "ATA" },
+                { num: 7, name: "Serge Gnabry", pos: "ATA" },
+                { num: 9, name: "Harry Kane", pos: "ATA" }
+            ]}
+        };
+
+        const matches = [
+            { id: 1, leagueKey: "BRA", leagueName: "Brasileirão Série A", venue: "Maracanã", home: "FLA", away: "PAL", homeScore: 2, awayScore: 1, minute: 74, posH: "56%", posA: "44%", chuteH: 12, chuteA: 7 },
+            { id: 2, leagueKey: "ESP", leagueName: "La Liga", venue: "Santiago Bernabéu", home: "RMA", away: "BAR", homeScore: 1, awayScore: 1, minute: 35, posH: "50%", posA: "50%", chuteH: 6, chuteA: 6 },
+            { id: 3, leagueKey: "EPL", leagueName: "Premier League", venue: "Etihad Stadium", home: "MCI", away: "LIV", homeScore: 3, awayScore: 2, minute: 88, posH: "62%", posA: "38%", chuteH: 15, chuteA: 9 },
+            { id: 4, leagueKey: "UCL", leagueName: "UEFA Champions League", venue: "Allianz Arena", home: "BAY", away: "RMA", homeScore: 0, awayScore: 0, minute: 12, posH: "48%", posA: "52%", chuteH: 2, chuteA: 3 },
+            { id: 5, leagueKey: "BRA", leagueName: "Brasileirão Série A", venue: "Nilton Santos", home: "BOT", away: "FLA", homeScore: 1, awayScore: 0, minute: 55, posH: "51%", posA: "49%", chuteH: 8, chuteA: 8 }
+        ];
+
+        let selectedMatchId = 1;
+
+        function filterLeague(leagueKey) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const filtered = leagueKey === 'ALL' ? matches : matches.filter(m => m.leagueKey === leagueKey);
+            renderMatchList(filtered);
+            if(filtered.length > 0) selectMatch(filtered[0].id);
+        }
+
+        function renderMatchList(list = matches) {
+            const listEl = document.getElementById('match-list');
+            document.getElementById('match-count').innerText = list.length;
+            listEl.innerHTML = '';
+
+            list.forEach(m => {
+                const homeTeam = teamsDatabase[m.home];
+                const awayTeam = teamsDatabase[m.away];
+
+                const card = document.createElement('div');
+                card.className = `match-card ${m.id === selectedMatchId ? 'selected' : ''}`;
+                card.onclick = () => selectMatch(m.id);
+                card.innerHTML = `
+                    <div class="league-title">${m.leagueName}</div>
+                    <div class="team-row"><span>${homeTeam.name}</span><span>${m.homeScore}</span></div>
+                    <div class="team-row"><span>${awayTeam.name}</span><span>${m.awayScore}</span></div>
+                    <div class="match-status"><span>⏱️ ${m.minute}'</span><span style="color:var(--live-red)">AO VIVO</span></div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function selectMatch(id) {
+            selectedMatchId = id;
+            const match = matches.find(m => m.id === id);
+            const home = teamsDatabase[match.home];
+            const away = teamsDatabase[match.away];
+
+            document.getElementById('match-meta').innerText = `${match.leagueName} • ${match.venue}`;
+            document.getElementById('home-name').innerText = home.name;
+            document.getElementById('away-name').innerText = away.name;
+            document.getElementById('home-badge').innerText = match.home;
+            document.getElementById('away-badge').innerText = match.away;
+            document.getElementById('home-score').innerText = match.homeScore;
+            document.getElementById('away-score').innerText = match.awayScore;
+            document.getElementById('live-minute').innerText = match.minute;
+
+            // Renderizar Escalações Titulares
+            renderLineup('home-players-list', 'lineup-home-title', home);
+            renderLineup('away-players-list', 'lineup-away-title', away);
+
+            // Estatísticas
+            document.getElementById('stat-pos-h').innerText = match.posH;
+            document.getElementById('stat-pos-a').innerText = match.posA;
+            document.getElementById('bar-pos-h').style.width = match.posH;
+            document.getElementById('bar-pos-a').style.width = match.posA;
+            document.getElementById('stat-chute-h').innerText = match.chuteH;
+            document.getElementById('stat-chute-a').innerText = match.chuteA;
+
+            renderMatchList();
+        }
+
+        function renderLineup(elementId, titleId, team) {
+            document.getElementById(titleId).innerText = `${team.name} (Titulares)`;
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            team.squad.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <div>
+                        <span class="player-number">${p.num}</span>
+                        <strong>${p.name}</strong>
+                    </div>
+                    <span class="player-pos">${p.pos}</span>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Inicialização
+        renderMatchList();
+        selectMatch(1);
+    </script>
+</body>
+</html>
